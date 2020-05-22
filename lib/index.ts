@@ -3,9 +3,15 @@ import { join } from 'path'
 import { spawnSync } from 'child_process'
 import * as log from 'npmlog'
 
+type FilepackOptions = {
+  cwd: string,
+  production?: boolean
+}
+
 type NpmCommandOptions = {
   cwd?: string
-  output?: boolean
+  output?: boolean,
+  production?: boolean
 }
 
 const FILE_PACK_PREFIX = 'file+pack:'
@@ -68,15 +74,21 @@ async function installFilePackDependencies(packageJson: any, kind: 'dependencies
   }
 }
 
-async function npmInstall({ cwd, output = true }: NpmCommandOptions = {}) {
-  spawnSync('npm', [ 'install' ], { cwd, stdio: output ? [ 0, 1, 2 ] : 'ignore' })
+async function npmInstall({ cwd, output = true, production }: NpmCommandOptions = {}) {
+  const args = [ 'install' ]
+
+  if (production) {
+    args.push('--production')
+  }
+
+  spawnSync('npm', args, { cwd, stdio: output ? [ 0, 1, 2 ] : 'ignore' })
 }
 
 async function npmPack({ cwd, output = true }: NpmCommandOptions = {}) {
   spawnSync('npm', [ 'pack' ], { cwd, stdio: output ? [ 0, 1, 2 ] : 'ignore' })
 }
 
-export async function filepack({ cwd }) {
+export async function filepack({ cwd, production }: FilepackOptions) {
   const originalPackageJsonFile = join(cwd, 'package.json')
   const backupPackageJsonFile = join(cwd, 'package.filepack_backup.json')
   const originalPackageJsonContent = await fs.readFile(originalPackageJsonFile, 'utf8')
@@ -95,12 +107,12 @@ export async function filepack({ cwd }) {
 
     await installFilePackDependencies(originalPackageJson, 'dependencies', { cwd })
 
-    if (process.env.NODE_ENV !== 'production') {
+    if (!production) {
       await installFilePackDependencies(originalPackageJson, 'devDependencies', { cwd })
     }
 
     await fs.writeFile(originalPackageJsonFile, JSON.stringify(originalPackageJson, null, 2), 'utf8')
-    await npmInstall({ cwd })
+    await npmInstall({ cwd, production })
 
     log.info('filepack', `done install on ${ originalPackageJson.name }`)
 
@@ -113,6 +125,10 @@ export async function filepack({ cwd }) {
 }
 
 (async () => {
-  const filepackRestore = await filepack({ cwd: process.cwd() })
+  const cwd = join(process.cwd(), process.env.PREFIX || '')
+  const production = process.env.NODE_ENV === 'production'
+
+  const filepackRestore = await filepack({ cwd, production })
+
   await filepackRestore()
 })()
