@@ -1,0 +1,14 @@
+{
+  "name": "test-package-b",
+  "version": "1.0.0",
+  "main": "./lib/index.js",
+  "scripts": {
+    "prepack": "tsc"
+  },
+  "dependencies": {
+    "test-package-a": "file+pack:../test-package-a"
+  },
+  "devDependencies": {
+    "@build/package": "file+pack:../build-package"
+  }
+}

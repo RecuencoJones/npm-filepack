@@ -1,0 +1,10 @@
+{
+  "name": "foo",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "test-package-a": "file+pack:../test-package-a",
+    "test-package-b": "file+pack:../test-package-b"
+  }
+}

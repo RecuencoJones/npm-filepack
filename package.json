@@ -1,0 +1,16 @@
+{
+  "name": "npm-filepack",
+  "version": "0.1.0",
+  "bin": "./bin/npm-filepack",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "npmlog": "4.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "14.0.5",
+    "@types/npmlog": "4.1.2",
+    "typescript": "3.9.3"
+  }
+}
