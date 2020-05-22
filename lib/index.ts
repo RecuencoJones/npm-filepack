@@ -125,7 +125,7 @@ export async function filepack({ cwd, production }: FilepackOptions) {
 }
 
 (async () => {
-  const cwd = join(process.cwd(), process.env.PREFIX || '')
+  const cwd = join(process.cwd(), process.env.FILEPACK_PREFIX || '')
   const production = process.env.NODE_ENV === 'production'
 
   const filepackRestore = await filepack({ cwd, production })
