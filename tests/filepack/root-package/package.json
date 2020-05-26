@@ -1,0 +1,14 @@
+{
+  "name": "root-package",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "filepackDependencies": {
+    "test-package-a": "../test-package-a",
+    "test-package-b": "../test-package-b"
+  },
+  "dependencies": {
+    "test-package-a": "../test-package-a/test-package-a-1.0.0.tgz",
+    "test-package-b": "../test-package-b/test-package-b-1.0.0.tgz"
+  }
+}

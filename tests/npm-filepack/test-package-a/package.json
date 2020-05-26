@@ -1,0 +1,11 @@
+{
+  "name": "test-package-a",
+  "version": "1.0.0",
+  "main": "./lib/index.js",
+  "scripts": {
+    "prepack": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "3.9"
+  }
+}

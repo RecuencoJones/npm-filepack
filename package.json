@@ -1,7 +1,10 @@
 {
   "name": "npm-filepack",
-  "version": "0.3.0",
-  "bin": "./bin/npm-filepack",
+  "version": "0.4.0",
+  "bin": {
+    "filepack": "./bin/filepack",
+    "npm-filepack": "./bin/npm-filepack"
+  },
   "scripts": {
     "build": "tsc"
   },
