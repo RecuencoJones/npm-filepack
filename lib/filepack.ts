@@ -1,28 +1,7 @@
 import { join, relative } from 'path'
 import { promises as fs } from 'fs'
 import * as log from 'npmlog'
-import { installFilePackDependency, npmInstall } from './common'
-
-export type FilepackOptions = {
-  cwd: string,
-  production?: boolean,
-  output?: boolean
-}
-
-export enum FilepackDepedency {
-  RUNTIME = 'filepackDependencies',
-  DEVELOP = 'filepackDevDependencies'
-}
-
-export enum PackageDependency {
-  RUNTIME = 'dependencies',
-  DEVELOP = 'devDependencies'
-}
-
-const filepackToNative = Object.freeze({
-  [FilepackDepedency.RUNTIME]: PackageDependency.RUNTIME,
-  [FilepackDepedency.DEVELOP]: PackageDependency.DEVELOP
-});
+import { installFilePackDependency, npmInstall, bootstrap, FilepackOptions, FilepackDepedency, filepackToNative } from './common'
 
 const cache: Record<string, string> = {}
 
@@ -36,7 +15,7 @@ async function installFilePackDependencies(packageJson: any, kind: FilepackDeped
     await fs.rmdir(join(cwd, 'node_modules', key), { recursive: true })
 
     if (cache[key]) {
-      log.info('filepack', `using cache for ${ key }`)
+      log.verbose('filepack', `reusing cache for ${ key }`)
       tgzPath = cache[key]
     } else {
       tgzPath = await installFilePackDependency(key, { cwd: join(cwd, value), output, filepack })
@@ -49,12 +28,13 @@ async function installFilePackDependencies(packageJson: any, kind: FilepackDeped
   }
 }
 
-async function filepack({ cwd, production, output }: FilepackOptions) {
+async function filepack({ cwd, production, output, npmInstallArgs }: FilepackOptions) {
   const sourcePackageJsonFile = join(cwd, 'package.json')
   const sourcePackageJsonContent = await fs.readFile(sourcePackageJsonFile, 'utf8')
   const sourcePackageJson = JSON.parse(sourcePackageJsonContent)
 
-  log.info('filepack', `running install on ${ sourcePackageJson.name }`)
+  log.info('filepack', `running on ${ sourcePackageJson.name }`)
+  log.verbose('filepack', `running install on ${ sourcePackageJson.name }`)
 
   if (sourcePackageJson.filepackDependencies) {
     await installFilePackDependencies(sourcePackageJson, FilepackDepedency.RUNTIME, { cwd, output: false })
@@ -65,19 +45,7 @@ async function filepack({ cwd, production, output }: FilepackOptions) {
   }
 
   await fs.writeFile(sourcePackageJsonFile, JSON.stringify(sourcePackageJson, null, 2), 'utf8')
-  await npmInstall({ cwd, production, output })
-
-  log.info('filepack', `done install on ${ sourcePackageJson.name }`)
+  await npmInstall({ cwd, production, output, args: npmInstallArgs })
 }
 
-export async function run() {
-  const cwd = join(process.cwd(), process.env.FILEPACK_PREFIX || '')
-  const production = process.env.NODE_ENV === 'production'
-
-  try {
-    await filepack({ cwd, production })
-  } catch(e) {
-    console.error(e.message);
-    process.exit(1);
-  }
-}
+export const run = bootstrap(filepack)

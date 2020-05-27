@@ -2,21 +2,46 @@ import { join } from 'path'
 import { promises as fs } from 'fs'
 import { spawnSync } from 'child_process'
 import * as log from 'npmlog'
+import { parseArguments } from './cli'
+
+export type FilepackOptions = {
+  cwd: string
+  production?: boolean
+  verbose?: boolean
+  output?: boolean
+  npmInstallArgs?: Array<string>
+}
 
 export type NpmCommandOptions = {
   cwd?: string
   output?: boolean
   production?: boolean
+  args?: Array<string>
 }
 
-export async function npmInstall({ cwd, output = true, production }: NpmCommandOptions = {}) {
-  const args = [ 'install' ]
+export enum FilepackDepedency {
+  RUNTIME = 'filepackDependencies',
+  DEVELOP = 'filepackDevDependencies'
+}
+
+export enum PackageDependency {
+  RUNTIME = 'dependencies',
+  DEVELOP = 'devDependencies'
+}
+
+export const filepackToNative = Object.freeze({
+  [FilepackDepedency.RUNTIME]: PackageDependency.RUNTIME,
+  [FilepackDepedency.DEVELOP]: PackageDependency.DEVELOP
+})
+
+export async function npmInstall({ cwd, output = true, production, args = [] }: NpmCommandOptions = {}) {
+  const defaultArgs = [ 'install' ]
 
   if (production) {
-    args.push('--production')
+    defaultArgs.push('--production')
   }
 
-  const result = spawnSync('npm', args, { cwd, stdio: output ? [ 0, 1, 2 ] : 'ignore' })
+  const result = spawnSync('npm', defaultArgs.concat(args), { cwd, stdio: output ? [ 0, 1, 2 ] : 'ignore' })
 
   if (result.error || result.status > 0) {
     throw result.error || new Error(`npm install ended with status ${ result.status }\nrun \`npm install\` on ${ cwd } for details`)
@@ -46,16 +71,33 @@ export async function installFilePackDependency(packageName: string, { cwd, file
     filepackRestore = await filepack({ cwd, output })
     await npmInstall({ cwd, output: false })
 
-    log.info('filepack', `running prepack for ${ packageName }`)
+    log.verbose('filepack', `running prepack on ${ packageName }`)
   }
 
   await npmPack({ cwd, output: false })
 
-  packageJson.scripts?.prepack && log.info('filepack', `done prepack for ${ packageName }`)
-
   filepackRestore && await filepackRestore()
 
-  log.info('filepack', `done on ${ packageName }`)
-
   return join(cwd, `${ name }-${ packageJson.version }.tgz`)
+}
+
+export function bootstrap(fn: (options: FilepackOptions) => Promise<void>) {
+  const args = parseArguments()
+
+  const cwd = join(process.cwd(), process.env.FILEPACK_PREFIX || args.prefix || '')
+  const production = process.env.NODE_ENV === 'production' || args.production
+  const verbose = !!process.env.VERBOSE || args.verbose
+
+  Object.defineProperty(log, 'level', {
+    value: verbose ? 'verbose' : 'info'
+  })
+
+  return async () => {
+    try {
+      await fn({ cwd, production, verbose, npmInstallArgs: args._ })
+    } catch(e) {
+      console.error(e.message)
+      process.exit(1)
+    }
+  }
 }

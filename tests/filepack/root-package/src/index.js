@@ -1,3 +1,3 @@
-const b = require('test-package-b');
+const b = require('test-package-b')
 
-b.print();
+b.print()

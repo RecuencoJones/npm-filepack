@@ -1,5 +1,5 @@
-import { text } from 'test-package-a';
+import { text } from 'test-package-a'
 
 export function print() {
-  console.log(text);
+  console.log(text)
 }

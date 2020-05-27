@@ -1,19 +1,30 @@
 {
   "name": "npm-filepack",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "bin": {
     "filepack": "./bin/filepack",
     "npm-filepack": "./bin/npm-filepack"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "clean": "rimraf **/lib/**/*.js **/*.tgz tests/**/package-lock.json tests/**/node_modules",
+    "lint": "eslint --ext .ts lib bin/* tests",
+    "test": "npm run test:filepack && npm run test:npm-filepack",
+    "test:filepack": "./bin/filepack --prefix tests/filepack/root-package",
+    "test:npm-filepack": "./bin/npm-filepack --prefix tests/npm-filepack/root-package"
   },
   "dependencies": {
-    "npmlog": "4.1.2"
+    "npmlog": "4.1.2",
+    "yargs": "15.3.1"
   },
   "devDependencies": {
     "@types/node": "14.0.5",
     "@types/npmlog": "4.1.2",
+    "@types/yargs": "15.0.5",
+    "@typescript-eslint/eslint-plugin": "3.0.1",
+    "@typescript-eslint/parser": "3.0.1",
+    "eslint": "7.1.0",
+    "rimraf": "3.0.2",
     "typescript": "3.9.3"
   }
 }

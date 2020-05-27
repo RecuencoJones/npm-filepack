@@ -1,5 +1,5 @@
 {
-  "name": "foo",
+  "name": "root-package",
   "scripts": {
     "start": "node src/index.js"
   },

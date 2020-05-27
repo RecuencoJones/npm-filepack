@@ -1,3 +1,3 @@
 #!/usr/bin/env node
 
-require('../lib/npm-filepack').run();
+require('../lib/npm-filepack').run()
